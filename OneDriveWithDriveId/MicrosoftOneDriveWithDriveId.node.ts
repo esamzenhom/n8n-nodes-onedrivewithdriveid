@@ -62,7 +62,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
-		const returnData: INNodeExecutionData[] = [];
+		const returnData: INodeExecutionData[] = [];
 		const length = items.length;
 		const nodeVersion = this.getNode().typeVersion;
 		let responseData;
@@ -340,10 +340,10 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 			} catch (error) {
 				if (this.continueOnFail()) {
 					if (resource === 'file' && operation === 'download') {
-						items[i].json = { error: error.message };
+						items[i].json = { error: (error as Error).message };
 					} else {
 						const executionErrorData = this.helpers.constructExecutionMetaData(
-							this.helpers.returnJsonArray({ error: error.message }),
+							this.helpers.returnJsonArray({ error: (error as Error).message }),
 							{ itemData: { item: i } },
 						);
 						returnData.push(...executionErrorData);

@@ -1,4 +1,3 @@
-import { MicrosoftOneDriveWithDriveId } from './MicrosoftOneDriveWithDriveId.node';
-import { MicrosoftOneDriveWithDriveIdOAuth2Api } from './MicrosoftOneDriveWithDriveIdOAuth2Api.credentials';
-export { MicrosoftOneDriveWithDriveId, MicrosoftOneDriveWithDriveIdOAuth2Api };
+export { MicrosoftOneDriveWithDriveId } from './MicrosoftOneDriveWithDriveId.node';
+export { MicrosoftOneDriveWithDriveIdOAuth2Api } from './MicrosoftOneDriveWithDriveIdOAuth2Api.credentials';
 //# sourceMappingURL=index.d.ts.map
