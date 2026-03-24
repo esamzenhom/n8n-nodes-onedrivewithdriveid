@@ -19,7 +19,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 		name: 'microsoftOneDriveWithDriveId',
 		icon: 'file:oneDrive.svg',
 		group: ['input'],
-		version: [1, 1.1],
+		version: [1, 2],
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Consume Microsoft OneDrive API with custom Drive ID',
 		schemaPath: 'Microsoft/OneDrive',
