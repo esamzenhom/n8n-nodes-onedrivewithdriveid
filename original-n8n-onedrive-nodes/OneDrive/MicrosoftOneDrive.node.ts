@@ -13,25 +13,25 @@ import { fileFields, fileOperations } from './FileDescription';
 import { folderFields, folderOperations } from './FolderDescription';
 import { microsoftApiRequest, microsoftApiRequestAllItems } from './GenericFunctions';
 
-export class MicrosoftOneDriveWithDriveId implements INodeType {
+export class MicrosoftOneDrive implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Microsoft OneDrive (With Drive ID)',
-		name: 'microsoftOneDriveWithDriveId',
+		displayName: 'Microsoft OneDrive',
+		name: 'microsoftOneDrive',
 		icon: 'file:oneDrive.svg',
 		group: ['input'],
-		version: [1, 1],
+		version: [1, 1.1],
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Consume Microsoft OneDrive API with custom Drive ID',
+		description: 'Consume Microsoft OneDrive API',
 		schemaPath: 'Microsoft/OneDrive',
 		defaults: {
-			name: 'Microsoft OneDrive (With Drive ID)',
+			name: 'Microsoft OneDrive',
 		},
 		usableAsTool: true,
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
-				name: 'microsoftOneDriveWithDriveIdOAuth2Api',
+				name: 'microsoftOneDriveOAuth2Api',
 				required: true,
 			},
 		],
@@ -71,6 +71,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 		for (let i = 0; i < length; i++) {
 			try {
 				if (resource === 'file') {
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_copy?view=odsp-graph-online
 					if (operation === 'copy') {
 						const fileId = this.getNodeParameter('fileId', i) as string;
 						const additionalFields = this.getNodeParameter('additionalFields', i);
@@ -94,11 +95,13 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 						);
 						responseData = { location: responseData.headers.location };
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_delete?view=odsp-graph-online
 					if (operation === 'delete') {
 						const fileId = this.getNodeParameter('fileId', i) as string;
 						responseData = await microsoftApiRequest.call(this, 'DELETE', `/drive/items/${fileId}`);
 						responseData = { success: true };
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_list_children?view=odsp-graph-online
 					if (operation === 'download') {
 						const fileId = this.getNodeParameter('fileId', i) as string;
 						const dataPropertyNameDownload = this.getNodeParameter('binaryPropertyName', i);
@@ -151,6 +154,9 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 						}
 
 						if (items[i].binary !== undefined) {
+							// Create a shallow copy of the binary data so that the old
+							// data references which do not get changed still stay behind
+							// but the incoming data does not get changed.
 							Object.assign(newItem.binary!, items[i].binary);
 						}
 
@@ -169,10 +175,12 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							mimeType,
 						);
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_get?view=odsp-graph-online
 					if (operation === 'get') {
 						const fileId = this.getNodeParameter('fileId', i) as string;
 						responseData = await microsoftApiRequest.call(this, 'GET', `/drive/items/${fileId}`);
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_search?view=odsp-graph-online
 					if (operation === 'search') {
 						const query = this.getNodeParameter('query', i) as string;
 						responseData = await microsoftApiRequestAllItems.call(
@@ -183,6 +191,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 						);
 						responseData = responseData.filter((item: IDataObject) => item.file);
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_createlink?view=odsp-graph-online
 					if (operation === 'share') {
 						const fileId = this.getNodeParameter('fileId', i) as string;
 						const type = this.getNodeParameter('type', i) as string;
@@ -198,18 +207,19 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							body,
 						);
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_put_content?view=odsp-graph-online#example-upload-a-new-file
 					if (operation === 'upload') {
 						const parentId = this.getNodeParameter('parentId', i) as string;
 						const isBinaryData = this.getNodeParameter('binaryData', i);
 						const fileName = this.getNodeParameter('fileName', i) as string;
 
 						if (isBinaryData) {
-							const binaryPropertyName = this.getNodeParameter('binaryPropertyName', i);
+							const binaryPropertyName = this.getNodeParameter('binaryPropertyName', 0);
 							const binaryData = this.helpers.assertBinaryData(i, binaryPropertyName);
 							const body = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
 							let encodedFilename;
 
-							if (nodeVersion >= 1) {
+							if (nodeVersion >= 1.1) {
 								if (fileName !== '') {
 									encodedFilename = encodeURIComponent(fileName);
 								} else if (binaryData.fileName !== undefined) {
@@ -232,7 +242,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 								body,
 								{},
 								undefined,
-								{ 'Content-Type': binaryData.mimeType, 'Content-Length': body.length },
+								{ 'Content-Type': binaryData.mimeType, 'Content-length': body.length },
 								{},
 							);
 
@@ -258,6 +268,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 					}
 				}
 				if (resource === 'folder') {
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_post_children?view=odsp-graph-online
 					if (operation === 'create') {
 						const names = (this.getNodeParameter('name', i) as string)
 							.split('/')
@@ -280,6 +291,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							parentFolderId = responseData.id;
 						}
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_delete?view=odsp-graph-online
 					if (operation === 'delete') {
 						const folderId = this.getNodeParameter('folderId', i) as string;
 						responseData = await microsoftApiRequest.call(
@@ -289,6 +301,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 						);
 						responseData = { success: true };
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_list_children?view=odsp-graph-online
 					if (operation === 'getChildren') {
 						const folderId = this.getNodeParameter('folderId', i) as string;
 						responseData = await microsoftApiRequestAllItems.call(
@@ -298,6 +311,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							`/drive/items/${folderId}/children`,
 						);
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_search?view=odsp-graph-online
 					if (operation === 'search') {
 						const query = this.getNodeParameter('query', i) as string;
 						responseData = await microsoftApiRequestAllItems.call(
@@ -308,6 +322,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 						);
 						responseData = responseData.filter((item: IDataObject) => item.folder);
 					}
+					//https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_createlink?view=odsp-graph-online
 					if (operation === 'share') {
 						const folderId = this.getNodeParameter('folderId', i) as string;
 						const type = this.getNodeParameter('type', i) as string;
@@ -340,10 +355,10 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 			} catch (error) {
 				if (this.continueOnFail()) {
 					if (resource === 'file' && operation === 'download') {
-						items[i].json = { error: (error as Error).message };
+						items[i].json = { error: error.message };
 					} else {
 						const executionErrorData = this.helpers.constructExecutionMetaData(
-							this.helpers.returnJsonArray({ error: (error as Error).message }),
+							this.helpers.returnJsonArray({ error: error.message }),
 							{ itemData: { item: i } },
 						);
 						returnData.push(...executionErrorData);
@@ -351,9 +366,6 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 					continue;
 				}
 				throw error;
-			}
-			if (responseData === undefined) {
-				throw new NodeOperationError(this.getNode(), 'Operation not implemented', { itemIndex: i });
 			}
 			const executionData = this.helpers.constructExecutionMetaData(
 				this.helpers.returnJsonArray(responseData as IDataObject),
@@ -363,6 +375,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 			returnData.push(...executionData);
 		}
 		if (resource === 'file' && operation === 'download') {
+			// For file downloads the files get attached to the existing items
 			return [items];
 		}
 

@@ -1,11 +1,11 @@
 {
   "name": "n8n-nodes-onedrivewithdriveid",
-  "version": "1.0.7",
+  "version": "1.0.15",
   "description": "Microsoft OneDrive node for n8n with Drive ID support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp OneDriveWithDriveId/*.json dist/",
     "lint": "eslint OneDriveWithDriveId/**/*.ts",
     "prepublishOnly": "npm run build"
   },
@@ -18,11 +18,13 @@
     "microsoft-onedrive"
   ],
   "files": [
-    "dist"
+    "dist",
+    "OneDriveWithDriveId/*.json"
   ],
   "n8n": {
     "nodes": [
-      "dist/MicrosoftOneDriveWithDriveId.node.js"
+      "dist/MicrosoftOneDriveWithDriveId.node.js",
+      "dist/MicrosoftOneDriveWithDriveIdTrigger.node.js"
     ],
     "credentials": [
       "dist/MicrosoftOneDriveWithDriveIdOAuth2Api.credentials.js"
