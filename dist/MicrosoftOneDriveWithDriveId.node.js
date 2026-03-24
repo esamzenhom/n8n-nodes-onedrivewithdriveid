@@ -104,13 +104,23 @@ class MicrosoftOneDriveWithDriveId {
                         }
                         catch (error) {
                             if (downloadUrl) {
-                                responseData = await this.helpers.httpRequest({
-                                    method: 'GET',
-                                    url: downloadUrl,
-                                    returnFullResponse: true,
-                                    encoding: 'arraybuffer',
-                                    json: false,
-                                });
+                                try {
+                                    responseData = await this.helpers.httpRequest({
+                                        method: 'GET',
+                                        url: downloadUrl,
+                                        returnFullResponse: true,
+                                        encoding: 'arraybuffer',
+                                        json: false,
+                                    });
+                                }
+                                catch (downloadError) {
+                                    throw new n8n_workflow_1.NodeApiError(this.getNode(), downloadError, {
+                                        message: 'Failed to download file from both primary and fallback URLs',
+                                    });
+                                }
+                            }
+                            else {
+                                throw new n8n_workflow_1.NodeApiError(this.getNode(), error);
                             }
                         }
                         const newItem = {
@@ -139,7 +149,7 @@ class MicrosoftOneDriveWithDriveId {
                     }
                     if (operation === 'search') {
                         const query = this.getNodeParameter('query', i);
-                        responseData = await GenericFunctions_1.microsoftApiRequestAllItems.call(this, 'value', 'GET', `/drive/root/search(q='${query}')`);
+                        responseData = await GenericFunctions_1.microsoftApiRequestAllItems.call(this, 'value', 'GET', `/drive/root/search(q='${encodeURIComponent(query)}')`);
                         responseData = responseData.filter((item) => item.file);
                     }
                     if (operation === 'share') {
@@ -157,7 +167,7 @@ class MicrosoftOneDriveWithDriveId {
                         const isBinaryData = this.getNodeParameter('binaryData', i);
                         const fileName = this.getNodeParameter('fileName', i);
                         if (isBinaryData) {
-                            const binaryPropertyName = this.getNodeParameter('binaryPropertyName', 0);
+                            const binaryPropertyName = this.getNodeParameter('binaryPropertyName', i);
                             const binaryData = this.helpers.assertBinaryData(i, binaryPropertyName);
                             const body = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
                             let encodedFilename;
@@ -177,7 +187,7 @@ class MicrosoftOneDriveWithDriveId {
                                     encodedFilename = encodeURIComponent(binaryData.fileName);
                                 }
                             }
-                            responseData = await GenericFunctions_1.microsoftApiRequest.call(this, 'PUT', `/drive/items/${parentId}:/${encodedFilename}:/content`, body, {}, undefined, { 'Content-Type': binaryData.mimeType, 'Content-length': body.length }, {});
+                            responseData = await GenericFunctions_1.microsoftApiRequest.call(this, 'PUT', `/drive/items/${parentId}:/${encodedFilename}:/content`, body, {}, undefined, { 'Content-Type': binaryData.mimeType, 'Content-Length': body.length }, {});
                             responseData = JSON.parse(responseData);
                         }
                         else {
@@ -226,7 +236,7 @@ class MicrosoftOneDriveWithDriveId {
                     }
                     if (operation === 'search') {
                         const query = this.getNodeParameter('query', i);
-                        responseData = await GenericFunctions_1.microsoftApiRequestAllItems.call(this, 'value', 'GET', `/drive/root/search(q='${query}')`);
+                        responseData = await GenericFunctions_1.microsoftApiRequestAllItems.call(this, 'value', 'GET', `/drive/root/search(q='${encodeURIComponent(query)}')`);
                         responseData = responseData.filter((item) => item.folder);
                     }
                     if (operation === 'share') {
@@ -261,6 +271,9 @@ class MicrosoftOneDriveWithDriveId {
                     continue;
                 }
                 throw error;
+            }
+            if (responseData === undefined) {
+                throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Operation not implemented', { itemIndex: i });
             }
             const executionData = this.helpers.constructExecutionMetaData(this.helpers.returnJsonArray(responseData), { itemData: { item: i } });
             returnData.push(...executionData);

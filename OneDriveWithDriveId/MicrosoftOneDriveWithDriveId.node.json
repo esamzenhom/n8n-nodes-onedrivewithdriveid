@@ -3,6 +3,7 @@
 	"nodeVersion": 1,
 	"codexVersion": "1.0",
 	"categories": ["Data & Storage"],
+	"icon": "file:oneDrive.svg",
 	"resources": {
 		"credentialDocumentation": [
 			{

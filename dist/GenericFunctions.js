@@ -21,7 +21,11 @@ async function microsoftApiRequest(method, resource, body = {}, qs = {}, uri, he
         endpoint = uri;
     }
     else if (driveId) {
-        endpoint = `${baseUrl}/v1.0/drives/${driveId}${resource}`;
+        let cleanResource = resource;
+        if (cleanResource.startsWith('/drive')) {
+            cleanResource = cleanResource.substring(6);
+        }
+        endpoint = `${baseUrl}/v1.0/drives/${driveId}${cleanResource}`;
     }
     else {
         endpoint = `${baseUrl}/v1.0/me${resource}`;
@@ -46,7 +50,8 @@ async function microsoftApiRequest(method, resource, body = {}, qs = {}, uri, he
         if (Object.keys(body).length === 0) {
             delete options.body;
         }
-        return await this.helpers.requestOAuth2.call(this, 'microsoftOneDriveOAuth2Api', options);
+        const { requestOAuth2 } = this.helpers;
+        return await requestOAuth2.call(this, 'microsoftOneDriveWithDriveIdOAuth2Api', options);
     }
     catch (error) {
         throw new n8n_workflow_1.NodeApiError(this.getNode(), error);

@@ -131,13 +131,21 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							);
 						} catch (error) {
 							if (downloadUrl) {
-								responseData = await this.helpers.httpRequest({
-									method: 'GET',
-									url: downloadUrl,
-									returnFullResponse: true,
-									encoding: 'arraybuffer',
-									json: false,
-								});
+								try {
+									responseData = await this.helpers.httpRequest({
+										method: 'GET',
+										url: downloadUrl,
+										returnFullResponse: true,
+										encoding: 'arraybuffer',
+										json: false,
+									});
+								} catch (downloadError) {
+									throw new NodeApiError(this.getNode(), downloadError as JsonObject, {
+										message: 'Failed to download file from both primary and fallback URLs',
+									});
+								}
+							} else {
+								throw new NodeApiError(this.getNode(), error as JsonObject);
 							}
 						}
 
@@ -179,7 +187,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							this,
 							'value',
 							'GET',
-							`/drive/root/search(q='${query}')`,
+							`/drive/root/search(q='${encodeURIComponent(query)}')`,
 						);
 						responseData = responseData.filter((item: IDataObject) => item.file);
 					}
@@ -204,7 +212,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 						const fileName = this.getNodeParameter('fileName', i) as string;
 
 						if (isBinaryData) {
-							const binaryPropertyName = this.getNodeParameter('binaryPropertyName', 0);
+							const binaryPropertyName = this.getNodeParameter('binaryPropertyName', i);
 							const binaryData = this.helpers.assertBinaryData(i, binaryPropertyName);
 							const body = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
 							let encodedFilename;
@@ -232,7 +240,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 								body,
 								{},
 								undefined,
-								{ 'Content-Type': binaryData.mimeType, 'Content-length': body.length },
+								{ 'Content-Type': binaryData.mimeType, 'Content-Length': body.length },
 								{},
 							);
 
@@ -304,7 +312,7 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 							this,
 							'value',
 							'GET',
-							`/drive/root/search(q='${query}')`,
+							`/drive/root/search(q='${encodeURIComponent(query)}')`,
 						);
 						responseData = responseData.filter((item: IDataObject) => item.folder);
 					}
@@ -351,6 +359,9 @@ export class MicrosoftOneDriveWithDriveId implements INodeType {
 					continue;
 				}
 				throw error;
+			}
+			if (responseData === undefined) {
+				throw new NodeOperationError(this.getNode(), 'Operation not implemented', { itemIndex: i });
 			}
 			const executionData = this.helpers.constructExecutionMetaData(
 				this.helpers.returnJsonArray(responseData as IDataObject),
