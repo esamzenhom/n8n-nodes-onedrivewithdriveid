@@ -1,0 +1,35 @@
+{
+  "name": "n8n-nodes-onedrivewithdriveid",
+  "version": "1.0.0",
+  "description": "Microsoft OneDrive node for n8n with Drive ID support",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint OneDriveWithDriveId/**/*.ts"
+  },
+  "keywords": [
+    "n8n",
+    "onedrive",
+    "microsoft",
+    "cloud"
+  ],
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "nodes": [
+      "dist/OneDriveWithDriveId/MicrosoftOneDriveWithDriveId.node.js"
+    ],
+    "credentials": [
+      "dist/OneDriveWithDriveId/MicrosoftOneDriveWithDriveIdOAuth2Api.credentials.js"
+    ]
+  },
+  "dependencies": {
+    "luxon": "^3.4.4"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

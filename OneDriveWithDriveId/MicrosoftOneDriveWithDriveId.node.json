@@ -1,0 +1,24 @@
+{
+	"node": "n8n-nodes-base.microsoftOneDriveWithDriveId",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Data & Storage"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://docs.n8n.io/integrations/builtin/credentials/microsoft/"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.microsoftonedrive/"
+			}
+		]
+	},
+	"credentials": [
+		{
+			"name": "microsoftOneDriveWithDriveIdOAuth2Api",
+			"required": true
+		}
+	]
+}
